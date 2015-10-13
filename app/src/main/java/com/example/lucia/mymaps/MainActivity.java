@@ -1,10 +1,13 @@
 package com.example.lucia.mymaps;
 
+import android.app.Dialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.GoogleMap;
 
@@ -17,6 +20,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if(servicesOK()){
+            Toast.makeText(this, "Ready to map", Toast.LENGTH_LONG);
+        }
     }
 
     @Override
@@ -41,8 +47,16 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public boolean services(){
+    public boolean servicesOK(){
         int isAvailabe = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+        if(isAvailabe == ConnectionResult.SUCCESS){
+            return true;
+        }else if(GooglePlayServicesUtil.isUserRecoverableError(isAvailabe)){
+            Dialog dialog = GooglePlayServicesUtil.getErrorDialog(isAvailabe,this,ERROR_DIALOG_REQUEST);
+            dialog.show();
+        }else {
+            Toast.makeText(this, "Cannot connect to mapping service", Toast.LENGTH_LONG);
+        }
         return false;
     }
 }
