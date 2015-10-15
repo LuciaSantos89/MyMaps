@@ -1,11 +1,15 @@
 package com.example.lucia.mymaps;
 
 import android.app.Dialog;
+import android.location.Address;
+import android.location.Geocoder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -15,6 +19,9 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+
+import java.io.IOException;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,14 +34,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         if (servicesOK()) {
+
             setContentView(R.layout.activity_map);
             if (initMap()) {
-                Toast.makeText(this, "Ready to map", Toast.LENGTH_LONG);
-                goToLocation(SEATTLE_LAT,SEATTLE_LNG,5);
+                Toast.makeText(this, "Ready to map", Toast.LENGTH_LONG).show();
+                goToLocation(SEATTLE_LAT,SEATTLE_LNG,15);
+                mMap.setMyLocationEnabled(true);
             } else {
-                Toast.makeText(this, "Map not connected", Toast.LENGTH_LONG);
+                Toast.makeText(this, "Map not connected", Toast.LENGTH_LONG).show();
             }
         } else {
             setContentView(R.layout.activity_main);
@@ -50,14 +58,24 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id){
+            case R.id.mapTypeNone:
+                mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
+                break;
+            case R.id.mapTypeNormal:
+                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                break;
+            case R.id.mapTypeTerrain:
+                mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+                break;
+            case R.id.mapTypeHybrid:
+                mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+                break;
+            case R.id.mapTypeSatellite:
+                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                break;
         }
 
         return super.onOptionsItemSelected(item);
@@ -90,6 +108,29 @@ public class MainActivity extends AppCompatActivity {
             mMap.moveCamera(update);
         }
 
-    public void geoLocate(View view) {
+    private void hideSoftKeyboard(View v) {
+        InputMethodManager imm =
+                (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+    }
+
+    public void geoLocate(View v) throws IOException {
+        hideSoftKeyboard(v);
+        TextView tv = (TextView) findViewById(R.id.editText1);
+        String searchString = tv.getText().toString();
+        Toast.makeText(this, "Searching for: " + searchString, Toast.LENGTH_SHORT).show();
+
+        Geocoder gc = new Geocoder(this);
+        List<Address> list = gc.getFromLocationName(searchString, 1);
+
+        if(list.size() > 0){
+            Address addr = list.get(0);
+            String locality = addr.getLocality();
+            Toast.makeText(this, "Found" + locality, Toast.LENGTH_LONG);
+            double lat = addr.getLatitude();
+            double lng = addr.getLongitude();
+            goToLocation(lat,lng,15);
+
+        }
     }
 }
